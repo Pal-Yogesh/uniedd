@@ -97,7 +97,7 @@ export default function Footer() {
 
         <div className="mt-16 pt-8 border-t border-[var(--border)] flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-xs text-[var(--muted)]">
-            © 2024 Uniedd. All rights reserved.
+            © 2026 Uniedd. All rights reserved.
           </p>
           <div className="flex gap-6">
             <a href="#" className="text-xs text-[var(--muted)] hover:text-[var(--foreground)] transition-colors">
