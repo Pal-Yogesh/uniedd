@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Lottie from "lottie-react";
@@ -12,6 +12,43 @@ export default function CTA() {
   const sectionRef = useRef<HTMLElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const bgElementsRef = useRef<HTMLDivElement>(null);
+  const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState<{ type: "success" | "error"; message: string } | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setLoading(true);
+    setStatus(null);
+
+    const formData = new FormData(e.currentTarget);
+    const data = {
+      firstName: formData.get("firstName") as string,
+      lastName: formData.get("lastName") as string,
+      email: formData.get("email") as string,
+      instrument: formData.get("instrument") as string,
+    };
+
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+
+      const result = await res.json();
+
+      if (res.ok) {
+        setStatus({ type: "success", message: "Message Sent Successfully! Our team will connect within 24 hours." });
+        (e.target as HTMLFormElement).reset();
+      } else {
+        setStatus({ type: "error", message: result.error || "Something went wrong." });
+      }
+    } catch {
+      setStatus({ type: "error", message: "Network error. Please try again." });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -93,40 +130,53 @@ export default function CTA() {
               Join thousands of students who discovered their passion. Sign up and get your first lesson free.
             </p>
 
-            <form className="flex flex-col gap-4" onSubmit={(e) => e.preventDefault()}>
+            <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <input
                   type="text"
+                  name="firstName"
                   placeholder="First name"
+                  required
                   className="w-full px-4 py-3 bg-white border border-[var(--border)] rounded-xl text-[var(--foreground)] text-sm placeholder:text-[var(--muted)] focus:outline-none focus:border-[var(--brand-blue)]/50 transition-colors"
                 />
                 <input
                   type="text"
+                  name="lastName"
                   placeholder="Last name"
                   className="w-full px-4 py-3 bg-white border border-[var(--border)] rounded-xl text-[var(--foreground)] text-sm placeholder:text-[var(--muted)] focus:outline-none focus:border-[var(--brand-blue)]/50 transition-colors"
                 />
               </div>
               <input
                 type="email"
+                name="email"
                 placeholder="Email address"
+                required
                 className="w-full px-4 py-3 bg-white border border-[var(--border)] rounded-xl text-[var(--foreground)] text-sm placeholder:text-[var(--muted)] focus:outline-none focus:border-[var(--brand-blue)]/50 transition-colors"
               />
               <select
+                name="instrument"
+                required
                 className="w-full px-4 py-3 bg-white border border-[var(--border)] rounded-xl text-[var(--muted)] text-sm focus:outline-none focus:border-[var(--brand-blue)]/50 transition-colors appearance-none"
                 defaultValue=""
               >
                 <option value="" disabled>What do you want to learn?</option>
-                <option value="guitar">Guitar</option>
-                <option value="piano">Piano</option>
-                <option value="both">Both</option>
-                <option value="theory">Music Theory</option>
+                <option value="Guitar">Guitar</option>
+                <option value="Piano">Piano</option>
+                <option value="Both">Both</option>
+                <option value="Music Theory">Music Theory</option>
               </select>
               <button
                 type="submit"
-                className="w-full sm:w-auto px-8 py-3.5 bg-gradient-to-r from-[var(--brand-blue)] to-[var(--brand-orange)] text-white rounded-xl text-sm font-semibold hover:opacity-90 hover:-translate-y-px transition-all duration-300 shadow-lg shadow-[var(--brand-blue)]/20 mt-2"
+                disabled={loading}
+                className="w-full sm:w-auto px-8 py-3.5 bg-gradient-to-r from-[var(--brand-blue)] to-[var(--brand-orange)] text-white rounded-xl text-sm font-semibold hover:opacity-90 hover:-translate-y-px transition-all duration-300 shadow-lg shadow-[var(--brand-blue)]/20 mt-2 disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                Start Free Trial
+                {loading ? "Sending..." : "Start Free Trial"}
               </button>
+              {status && (
+                <p className={`text-sm mt-1 ${status.type === "success" ? "text-green-600" : "text-red-500"}`}>
+                  {status.message}
+                </p>
+              )}
             </form>
           </div>
 
